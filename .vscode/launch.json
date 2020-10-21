@@ -1,0 +1,40 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "A2 Random",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/A2/main.py",
+            "console": "integratedTerminal",
+            "args": ["random"],
+        },
+        {
+            "name":"A2 BFS",
+            "type":"python",
+            "request":"launch",
+            "program":"${workspaceFolder}/A2/main.py",
+            "console":"integratedTerminal",
+            "args": ["bfs"]
+        },
+        {
+            "name":"A2 DFS",
+            "type":"python",
+            "request":"launch",
+            "program":"${workspaceFolder}/A2/main.py",
+            "console":"integratedTerminal",
+            "args": ["dfs"]
+        },
+        {
+            "name":"A2 A*",
+            "type":"python",
+            "request":"launch",
+            "program":"${workspaceFolder}/A2/main.py",
+            "console":"integratedTerminal",
+            "args": ["a_star"]
+        },
+    ]
+}
