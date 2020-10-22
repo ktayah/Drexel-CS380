@@ -54,48 +54,38 @@ class Agent:
         states = get_root_traversal_states(currNode)
         util.pprint(states)
 
-    # def search(self, state, is_dfs):
-    #     print('initialState', state)
-        
-    #     if is_dfs:
-    #         return
-    #     else:
-    #         root = Node(state)
-    #         self.closed.append(root)
-    #         self.open.append(root)
-    #         if root.state.is_goal():
-    #             return root
-    #         i = 0
-            
-    #         while self.open and i < 10:
-    #             i += 1
-    #             node = self.open.pop(0)
-    #             for possibleChildrenState in node.possibleChildStates:
-    #                 newNode = Node(deepcopy(node.state))
-    #                 node.addChild(newNode)
-    #                 newNode.setParent(node)
-    #                 newNode.state.execute(possibleChildrenState)
-    #                 print('New interation', i)
-    #                 print('newNode state', newNode.state)
-    #                 for c in self.closed:
-    #                     print(c.state)
+    def search(self, isBfs = True):
+        goalNode = None
+        while self.open:
+            node = self.open.pop(0)
+            self.closed.append(node)
+            if node.state.is_goal():
+                goalNode = node
+                break
 
-    #                 if newNode not in self.closed:
-    #                     if newNode.state.is_goal():
-    #                         print('GoalState')
-    #                         util.pprint(newNode.state)
-    #                         return newNode
-    #                     self.open.append(newNode)
-    #             # level = []
-    #             # for c in self.closed:
-    #             #     level.append(c.state)
-    #             # util.pprint(level)
+            for action in node.getPossibleActions():
+                newNode = deepcopy(node)
+                newNode.state.execute(action)
+
+                if newNode not in self.closed or newNode not in self.open:
+                    node.addChild(newNode)
+                    newNode.setParent(node)
+                    if isBfs:
+                        self.open.append(newNode)
+                    else:
+                        self.open.insert(0, newNode)
+                
+        states = get_root_traversal_states(goalNode)
+        util.pprint(states)
+
 
     def bfs(self, state):
-        self.search(state, False)
+        self.open.append(Node(state))
+        self.search()
 
     def dfs(self, state):
-        return
+        self.open.append(Node(state))
+        self.search(False)
 
     def a_star(self, state, heuristic):
         return
