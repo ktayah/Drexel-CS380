@@ -3,6 +3,8 @@ import rgb
 from copy import deepcopy
 import util
 
+MAX_DFS_DEPTH = 10 # Set to 10 to avoid maximum recursion depth errors, found this depth limit to return the best results
+
 def get_root_traversal_states(node, states = []):
     states.append(node.state)
     if node.parent == None:
@@ -13,6 +15,7 @@ def get_root_traversal_states(node, states = []):
 class Node:
     state = None
     parent = None
+    depth = 0
     possibleChildStates = None
     children = []
 
@@ -32,10 +35,17 @@ class Node:
 
     def setParent(self, parentNode):
         self.parent = parentNode
+        self.depth = parentNode.depth + 1
 
 class Agent:
     open = []
     closed = []
+    searchType = ''
+    heuristic = None
+    maxDfsDepth = MAX_DFS_DEPTH
+
+    def setMaxDfsDepth(self, depth):
+        self.maxDfsDepth = depth
 
     def random_walk(self, state, n):
         currNode = Node(state)
@@ -56,6 +66,9 @@ class Agent:
 
     def search(self, isBfs = True):
         goalNode = None
+        currentDFSDepth = 0
+        iterations = 0
+
         while self.open:
             node = self.open.pop(0)
             self.closed.append(node)
@@ -63,31 +76,52 @@ class Agent:
                 goalNode = node
                 break
 
+            if self.searchType == 'dfs': 
+                if currentDFSDepth <= self.maxDfsDepth:
+                    currentDFSDepth += 1
+                else:
+                    currentDFSDepth = 0
+                    continue
+
             for action in node.getPossibleActions():
                 newNode = deepcopy(node)
                 newNode.state.execute(action)
+                iterations += 1
 
                 if newNode not in self.closed or newNode not in self.open:
                     node.addChild(newNode)
                     newNode.setParent(node)
-                    if isBfs:
+                    if self.searchType == 'bfs':
                         self.open.append(newNode)
-                    else:
+                    elif self.searchType == 'dfs':
                         self.open.insert(0, newNode)
-                
-        states = get_root_traversal_states(goalNode)
-        util.pprint(states)
+                    else:
+                        self.open.append(newNode)
+                        self.open.sort(key=lambda h: self.heuristic(h.state, h.depth))
+
+        if goalNode:
+            states = get_root_traversal_states(goalNode)
+            util.pprint(states)
+            return iterations
+        else:
+            print('Search failed, unable to find goal state.')
+            return None
 
 
     def bfs(self, state):
+        self.searchType = 'bfs'
         self.open.append(Node(state))
-        self.search()
+        return self.search()
 
     def dfs(self, state):
+        self.searchType = 'dfs'
         self.open.append(Node(state))
-        self.search(False)
+        return self.search()
 
     def a_star(self, state, heuristic):
-        return
+        self.searchType = 'astar'
+        self.heuristic = heuristic
+        self.open.append(Node(state))
+        return self.search()
 
         
