@@ -83,10 +83,10 @@ class Agent:
                     currentDFSDepth = 0
                     continue
 
+            iterations += 1
             for action in node.getPossibleActions():
                 newNode = deepcopy(node)
                 newNode.state.execute(action)
-                iterations += 1
 
                 if newNode not in self.closed or newNode not in self.open:
                     node.addChild(newNode)
