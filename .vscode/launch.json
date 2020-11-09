@@ -36,5 +36,29 @@
             "console":"integratedTerminal",
             "args": ["a_star"]
         },
+        {
+            "name":"A3 Minimax vs Human",
+            "type":"python",
+            "request":"launch",
+            "program":"${workspaceFolder}/A3/main.py",
+            "console":"integratedTerminal",
+            "args": ["minimax", "human"]
+        },
+        {
+            "name":"A3 Minimax vs Random",
+            "type":"python",
+            "request":"launch",
+            "program":"${workspaceFolder}/A3/main.py",
+            "console":"integratedTerminal",
+            "args": ["minimax", "random"]
+        },
+        {
+            "name":"A3 Minimax vs Minimax",
+            "type":"python",
+            "request":"launch",
+            "program":"${workspaceFolder}/A3/main.py",
+            "console":"integratedTerminal",
+            "args": ["minimax", "minimax"]
+        },
     ]
 }
