@@ -58,6 +58,14 @@ class Agent:
         # (you likely don't need to use or change this)
         self.name = train or 'q'
 
+        # the previously visited state key and previous action
+        self.p_reward = None
+        self.p_key = None
+        self.p_action = None
+
+        # Testing
+        self.win_count = 0
+
         # path is the path to the Q-table file
         # (you likely don't need to use or change this)
         self.path = os.path.join(os.path.dirname(
@@ -99,4 +107,44 @@ class Agent:
         choice among the possible actions. You will need to augment
         the code to implement Q-learning within the agent.
         '''
-        return random.choice(State.ACTIONS)
+        q_state = Q_State(state_string)
+        key = q_state.key
+        reward = q_state.reward()
+        at_goal = q_state.at_goal
+
+        epsilon = 1 # value used to figure out exploit/explore rate needed, higher initially, lower over time
+        max_epsilon = 1 
+        min_epsilon = 0.01
+        epsilon_decay = 0.005
+        alpha = 0.7 # learning rate
+        discount_factor = 0.1
+
+        action = None
+
+        exploit_explore_rate = random.uniform(0, 1)
+        if exploit_explore_rate > epsilon and key in self.q:
+            # Exploit
+            action = max(self.q[key], key = lambda a: self.q[key][a])
+        else:
+            # Explore
+            action = random.choice(State.ACTIONS)
+            epsilon -= epsilon_decay # reduce rate at which we explore over time
+            if key not in self.q:
+                # current state is not in q table, initialize it
+                self.q[key] = dict.fromkeys(State.ACTIONS, 0)
+
+        if self.p_key != None:
+            q_value = ((1 - alpha) * self.q[self.p_key][self.p_action]
+                + alpha * (self.p_reward + discount_factor 
+                * (self.q[key][action] - self.q[self.p_key][self.p_action])))
+            
+            self.q[self.p_key][self.p_action] = q_value
+
+        if at_goal:
+            self.win_count += 1
+
+        self.p_key = key # previous key
+        self.p_action = action # previous action
+        self.p_reward = reward # previous reward
+        self.save()
+        return action

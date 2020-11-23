@@ -21,10 +21,12 @@ if __name__ == '__main__':
     from frogger.frogger import Frogger
     game = Frogger(screen)
 
+    agent = None
     if player != 'human':
         agent_module = importlib.import_module(player)
         agent = agent_module.Agent(train=train)
         game.add_agent(agent)
 
     scores = game.run(steps=steps, speed=speed, restart=restart)
+    print('Wins:', agent.win_count)
     print('\t'.join([str(score) for score in scores]))
