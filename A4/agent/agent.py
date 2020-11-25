@@ -24,23 +24,25 @@ class Q_State(State):
         state within the dictionary.
         '''
 
-        # this simple key uses the 3 object characters above the frog
+        # this simple key uses the 3 object characters above the frog and the two besides the frog, and the character +2 in the y direction
         # and combines them into a key string
         return ''.join([
             self.get(self.frog_x - 1, self.frog_y - 1) or '_',
             self.get(self.frog_x, self.frog_y - 1) or '_',
+            self.get(self.frog_x, self.frog_y - 2) or '_',
             self.get(self.frog_x + 1, self.frog_y - 1) or '_',
+            self.get(self.frog_x - 1, self.frog_y) or '_',
+            self.get(self.frog_x + 1, self.frog_y) or '_',
         ])
 
     def reward(self):
         '''Returns a reward value for the state.'''
-
         if self.at_goal:
             return self.score
         elif self.is_done:
             return -10
         else:
-            return 0
+            return self.max_y - self.frog_y # closer to home row means higher reward
 
 
 class Agent:
@@ -63,8 +65,12 @@ class Agent:
         self.p_key = None
         self.p_action = None
 
-        # Testing
-        self.win_count = 0
+        # some constants for exploit/explore rate evalulation
+        # value used to figure out exploit/explore rate needed, higher initially, lower over time
+        self.epsilon = 1
+        self.epsilon_decay = 0.005
+        self.min_epsilon = 0
+        self.max_epsilon = 1
 
         # path is the path to the Q-table file
         # (you likely don't need to use or change this)
@@ -98,53 +104,42 @@ class Agent:
     def choose_action(self, state_string):
         '''
         Returns the action to perform.
-
-        This is the main method that interacts with the game interface:
-        given a state string, it should return the action to be taken
-        by the agent.
-
-        The initial implementation of this method is simply a random
-        choice among the possible actions. You will need to augment
-        the code to implement Q-learning within the agent.
         '''
         q_state = Q_State(state_string)
-        key = q_state.key
+        key = q_state._compute_key()
         reward = q_state.reward()
-        at_goal = q_state.at_goal
 
-        epsilon = 1 # value used to figure out exploit/explore rate needed, higher initially, lower over time
-        max_epsilon = 1 
-        min_epsilon = 0.01
-        epsilon_decay = 0.005
-        alpha = 0.7 # learning rate
-        discount_factor = 0.1
+        alpha = 0.9 # learning rate
+        discount_factor = 0.4
 
         action = None
 
-        exploit_explore_rate = random.uniform(0, 1)
-        if exploit_explore_rate > epsilon and key in self.q:
-            # Exploit
+        if self.train == None and key in self.q:
             action = max(self.q[key], key = lambda a: self.q[key][a])
-        else:
-            # Explore
+        elif self.train == None: # Fallback
             action = random.choice(State.ACTIONS)
-            epsilon -= epsilon_decay # reduce rate at which we explore over time
-            if key not in self.q:
-                # current state is not in q table, initialize it
-                self.q[key] = dict.fromkeys(State.ACTIONS, 0)
+        else:
+            exploit_explore_rate = random.uniform(self.min_epsilon, self.max_epsilon)
+            if exploit_explore_rate > self.epsilon and key in self.q:
+                # Exploit
+                action = max(self.q[key], key = lambda a: self.q[key][a])
+            else:
+                # Explore
+                action = random.choice(State.ACTIONS)
+                self.epsilon -= self.epsilon_decay # reduce rate at which we explore over time
+                if key not in self.q:
+                    # current state is not in q table, initialize it
+                    self.q[key] = dict.fromkeys(State.ACTIONS, 0)
 
-        if self.p_key != None:
-            q_value = ((1 - alpha) * self.q[self.p_key][self.p_action]
-                + alpha * (self.p_reward + discount_factor 
-                * (self.q[key][action] - self.q[self.p_key][self.p_action])))
-            
-            self.q[self.p_key][self.p_action] = q_value
+            if self.p_key != None:
+                q_value = ((1 - alpha) * self.q[self.p_key][self.p_action]
+                    + alpha * (self.p_reward + (discount_factor 
+                    * self.q[key][action]) - self.q[self.p_key][self.p_action]))
+                self.q[self.p_key][self.p_action] = q_value
 
-        if at_goal:
-            self.win_count += 1
+            self.p_key = key # previous key
+            self.p_action = action # previous action
+            self.p_reward = reward # previous reward
+            self.save()
 
-        self.p_key = key # previous key
-        self.p_action = action # previous action
-        self.p_reward = reward # previous reward
-        self.save()
         return action
