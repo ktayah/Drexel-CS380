@@ -40,9 +40,9 @@ class Q_State(State):
         if self.at_goal:
             return self.score
         elif self.is_done:
-            return -10
+            return -1000
         else:
-            return self.max_y - self.frog_y # closer to home row means higher reward
+            return -1 * (self.frog_y + ((self.max_x + 1) // 2 % (self.frog_x + 1))) # closer to home row means higher reward
 
 
 class Agent:
@@ -68,7 +68,7 @@ class Agent:
         # some constants for exploit/explore rate evalulation
         # value used to figure out exploit/explore rate needed, higher initially, lower over time
         self.epsilon = 1
-        self.epsilon_decay = 0.005
+        self.epsilon_decay = 0.01
         self.min_epsilon = 0
         self.max_epsilon = 1
 
@@ -109,8 +109,8 @@ class Agent:
         key = q_state._compute_key()
         reward = q_state.reward()
 
-        alpha = 0.9 # learning rate
-        discount_factor = 0.4
+        alpha = 0.8 # learning rate
+        discount_factor = 0.8
 
         action = None
 
